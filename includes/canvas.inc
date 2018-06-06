@@ -37,6 +37,7 @@ function islandora_iiif_islandora_canvas_solr_backend_callable($object) {
 
   // We should have a default sort here for sequences.
   $qp->executeQuery();
+  // dpm($qp->islandoraSolrResult['response']);
   return array(
     $qp->islandoraSolrResult['response']['numFound'],
     $qp->islandoraSolrResult['response']['objects'],
@@ -51,8 +52,13 @@ function islandora_iiif_canvas_callback(AbstractObject $object) {
   module_load_include('inc', 'islandora_solr_metadata', 'theme/theme');
 
   $canvas_info = islandora_iiif_islandora_canvas_solr_backend_callable($object);
-  $height = isset($canvas_info[0]['solr_doc']['RELS_INT_height_literal_s']) ? $canvas_info[0]['solr_doc']['RELS_INT_height_literal_s'] : '0';
-  $width = isset($canvas_info[0]['solr_doc']['RELS_INT_width_literal_s']) ? $canvas_info[0]['solr_doc']['RELS_INT_width_literal_s'] : '0';
+  $intwidth = isset($canvas_info['solr_doc']['RELS_INT_width_literal_s']) ? $canvas_info['solr_doc']['RELS_INT_width_literal_s'] : 640;
+  $intheight = isset($canvas_info['solr_doc']['RELS_INT_height_literal_s']) ? $canvas_info['solr_doc']['RELS_INT_height_literal_s'] : 480;
+  $fitswidth = isset($canvas_info['solr_doc']['fits_metadata_image_imageWidth_ms']) ? $canvas_info['solr_doc']['fits_metadata_image_imageWidth_ms'][0] : 640 ; 
+  $fitsheight = isset($canvas_info['solr_doc']['fits_metadata_image_imageHeight_ms']) ? $canvas_info['solr_doc']['fits_metadata_image_imageHeight_ms'][0] : 480 ; 
+  $height = max($intheight, $fitsheight);
+  $width = max($intwidth ,  $fitswidth);
+  
   $canvas = new \stdClass();
   $canvas->{'@context'} = "http://iiif.io/api/presentation/2/context.json";
   $canvas->{'@id'} = urldecode(url(current_path(),
@@ -72,28 +78,31 @@ function islandora_iiif_canvas_callback(AbstractObject $object) {
   $canvas->height = $height;
   $canvas->width = $width;
   $canvas->images = array(
-    "@type" => "oa:Annotation",
-    "motivation" => "sc:painting",
-    "resource" => array(
-      "@id" => urldecode(url("islandora_iiif/{$object->id}/full/max/default.jp2", array(
-        'absolute' => TRUE,
-        'language' => (object) array('language' => FALSE),
-      ))
+    array(
+      "@type" => "oa:Annotation",
+      "motivation" => "sc:painting",
+      "resource" => array(
+        "@id" => urldecode(url("islandora_iiif/{$object->id}/full/max/default.jp2", array(
+          'absolute' => TRUE,
+          'language' => (object) array('language' => FALSE),
+        ))
+        ),
+        "@type" => "dctypes:Image",
+        "height" => $height,
+        "width" => $width,
       ),
-      "@type" => "dctypes:Image",
-      "height" => $height,
-      "width" => $width,
-    ),
     "on" => $id,
-    "otherContent" => array(
-      "@type" => "sc:AnnotationList",
-      "@embed" => FALSE,
+      "otherContent" => array(
+        "@type" => "sc:AnnotationList",
+        "@embed" => FALSE,
+      ),
     ),
   );
 
   // And to make this legit we need a sequence with some canvases.
   drupal_add_http_header('Content-Type', 'application/json; charset=utf-8');
-  echo json_encode($canvas, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+  drupal_add_http_header('access-control-allow-origin', '*');
+  echo json_encode($canvas, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK);
   drupal_page_footer();
 
 }

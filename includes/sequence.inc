@@ -72,7 +72,7 @@ function islandora_iiif_islandora_sequence_solr_backend_callable($object, $page,
   }
 
   $qp->executeQuery();
-
+  //dpm ($qp->islandoraSolrResult['response']);
   return array(
     $qp->islandoraSolrResult['response']['numFound'],
     $qp->islandoraSolrResult['response']['objects'],
@@ -112,8 +112,15 @@ function islandora_iiif_sequence_generator(AbstractObject $object) {
       'absolute' => TRUE,
       'language' => (object) array('language' => FALSE),
     )));
-    $height = isset($canvas_info['solr_doc']['RELS_INT_height_literal_s']) ? $canvas_info['solr_doc']['RELS_INT_height_literal_s'] : '0';
-    $width = isset($canvas_info['solr_doc']['RELS_INT_width_literal_s']) ? $canvas_info['solr_doc']['RELS_INT_width_literal_s'] : '0';
+    
+    $intwidth = isset($canvas_info['solr_doc']['RELS_INT_width_literal_s']) ? $canvas_info['solr_doc']['RELS_INT_width_literal_s'] : 640;
+    $intheight = isset($canvas_info['solr_doc']['RELS_INT_height_literal_s']) ? $canvas_info['solr_doc']['RELS_INT_height_literal_s'] : 480;
+    $fitswidth = isset($canvas_info['solr_doc']['fits_metadata_image_imageWidth_ms']) ? $canvas_info['solr_doc']['fits_metadata_image_imageWidth_ms'][0] : 640 ; 
+    $fitsheight = isset($canvas_info['solr_doc']['fits_metadata_image_imageHeight_ms']) ? $canvas_info['solr_doc']['fits_metadata_image_imageHeight_ms'][0] : 480 ; 
+    $height = max($intheight, $fitsheight);
+    $width = max($intwidth ,  $fitswidth);
+   
+    
     $canvases[] = array(
       "@id" => $id ,
       "@type" => "sc:Canvas",
@@ -121,19 +128,21 @@ function islandora_iiif_sequence_generator(AbstractObject $object) {
       "height" => $height,
       "width" => $width,
       "images" => array(
-        "@type" => "oa:Annotation",
-        "motivation" => "sc:painting",
-        "resource" => array(
+        array(
+          "@type" => "oa:Annotation",
+          "motivation" => "sc:painting",
+          "resource" => array(
           "@id" => urldecode(url("islandora_iiif/{$canvas_info['PID']}/full/max/default.jp2", array(
             'absolute' => TRUE,
             'language' => (object) array('language' => FALSE),
-          ))
+            ))
+            ),
+            "@type" => "dctypes:Image",
+            "height" => $height,
+            "width" => $width,
           ),
-          "@type" => "dctypes:Image",
-          "height" => $height,
-          "width" => $width,
+          "on" => $id,
         ),
-        "on" => $id,
       ),
     );
   }
@@ -150,7 +159,9 @@ function islandora_iiif_sequence_generator(AbstractObject $object) {
 function islandora_iiif_sequence_callback(AbstractObject $object) {
   $sequence = islandora_iiif_sequence_generator($object);
   drupal_add_http_header('Content-Type', 'application/json; charset=utf-8');
-  echo json_encode($sequence, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+  
+  drupal_add_http_header('access-control-allow-origin', '*');
+  echo json_encode($sequence, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK);
   drupal_page_footer();
 
 }

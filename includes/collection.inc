@@ -40,9 +40,9 @@ function islandora_iiif_islandora_collection_solr_backend_callable($object, $ind
     $qp->solrParams['sort'] = $qp->internalSolrParams['sort'];
   }
 
-  $qp->executeQuery();
+  $qp->executeQuery(FALSE);
 
-  dpm($qp->islandoraSolrResult['response']);
+  // dpm($qp->islandoraSolrResult['response']);
 
   return array(
     $qp->islandoraSolrResult['response']['numFound'],
@@ -81,7 +81,7 @@ function islandora_iiif_collection_callback(AbstractObject $object, $index = 1) 
         ))),
         "service" => array(
           "@context" => "http://iiif.io/api/image/2/context.json",
-          "@id" => urldecode(url("islandora_iiif/{$object->id}/info.json", array(
+          "@id" => urldecode(url("islandora_iiif/{$children_info['PID']}/info.json", array(
             'absolute' => TRUE,
             'language' => (object) array('language' => FALSE),
           ))),
@@ -151,10 +151,12 @@ function islandora_iiif_collection_callback(AbstractObject $object, $index = 1) 
   $collection->total = (int) $total_children;
 
   if (($total_children > $index + $limit) && ($total_children > 0)) {
-    $next_url_str = "islandora_iiif/collection/{$object->id}/{($index+$limit+1)}";
+    $nextid = $index+$limit+1;
+    $next_url_str = "islandora_iiif/collection/{$object->id}/{$nextid}";
   }
   if (($index > $limit) && ($total_children > 0)) {
-    $prev_url_str = "islandora_iiif/collection/{$object->id}/{($index-$limit+1}";
+    $nextid = ($index-$limit+1);
+    $prev_url_str = "islandora_iiif/collection/{$object->id}/{$nextid}";
   }
 
   if ($next_url_str) {
@@ -197,7 +199,8 @@ function islandora_iiif_collection_callback(AbstractObject $object, $index = 1) 
 
   // And to make this legit we need a sequence with some canvases.
   drupal_add_http_header('Content-Type', 'application/json; charset=utf-8');
-  echo json_encode($collection, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+  drupal_add_http_header('access-control-allow-origin', '*');
+  echo json_encode($collection, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK);
   drupal_page_footer();
 
 }
