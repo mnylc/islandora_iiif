@@ -38,6 +38,7 @@ function islandora_iiif_islandora_canvas_solr_backend_callable($object) {
   // We should have a default sort here for sequences.
   $qp->executeQuery();
   // dpm($qp->islandoraSolrResult['response']);
+
   return array(
     $qp->islandoraSolrResult['response']['numFound'],
     $qp->islandoraSolrResult['response']['objects'],
@@ -51,7 +52,15 @@ function islandora_iiif_canvas_callback(AbstractObject $object) {
   module_load_include('inc', 'islandora_solr_metadata', 'includes/db');
   module_load_include('inc', 'islandora_solr_metadata', 'theme/theme');
 
+  $iiif_base_url = variable_get('islandora_iiif_iiif_url', 'iiif/2');
+  $tile_prefix = urlencode(variable_get('islandora_iiif_tile_url_prefix', 'http://127.0.0.1:8080/fedora/objects/'));
+  $tile_suffix = urlencode(variable_get('islandora_iiif_tile_url_suffix', '/datastreams/OBJ/content'));
+
+
+/** width and height by info.json not solr 
+/
   $canvas_info_total = islandora_iiif_islandora_canvas_solr_backend_callable($object);
+
   $canvas_info = $canvas_info_total[1];
   $intwidth = isset($canvas_info['solr_doc']['RELS_INT_width_literal_s']) ? $canvas_info['solr_doc']['RELS_INT_width_literal_s'] : 640;
   $intheight = isset($canvas_info['solr_doc']['RELS_INT_height_literal_s']) ? $canvas_info['solr_doc']['RELS_INT_height_literal_s'] : 480;
@@ -59,7 +68,14 @@ function islandora_iiif_canvas_callback(AbstractObject $object) {
   $fitsheight = isset($canvas_info['solr_doc']['fits_metadata_image_imageHeight_ms']) ? $canvas_info['solr_doc']['fits_metadata_image_imageHeight_ms'][0] : 480 ; 
   $height = max($intheight, $fitsheight);
   $width = max($intwidth ,  $fitswidth);
+**/
+
+  $info_response = file_get_contents($iiif_base_url . '/' . $tile_prefix . urlencode($object->id). $tile_suffix .'/info.json');
+  $jsonArray = json_decode($info_response,true);
+  $width = isset($jsonArray['width']) ? $jsonArray['width'] : 640;
+  $height = isset($jsonArray['height']) ? $jsonArray['height'] : 480;
   
+
   $canvas = new \stdClass();
   $canvas->{'@context'} = "http://iiif.io/api/presentation/2/context.json";
   $canvas->{'@id'} = urldecode(url(current_path(),
@@ -83,14 +99,26 @@ function islandora_iiif_canvas_callback(AbstractObject $object) {
       "@type" => "oa:Annotation",
       "motivation" => "sc:painting",
       "resource" => array(
-        "@id" => urldecode(url("islandora_iiif/{$object->id}/full/max/default.jp2", array(
-          'absolute' => TRUE,
-          'language' => (object) array('language' => FALSE),
-        ))
-        ),
+//        "@id" => urldecode(url("iiif-server/iiif/2/http%3A%2F%2F150.145.48.37%3A8080%2Ffedora%2Fobjects%2F{$object->id}%2Fdatastreams%2FOBJ%2Fcontent/full/full/0/default.jpg", array(
+        "@id" => $iiif_base_url . '/' . $tile_prefix . urlencode($object->id) . $tile_suffix . '/full/full/0/default.jpg',
+//          'absolute' => TRUE,
+//          'language' => (object) array('language' => FALSE),
+//        ))
+//        ),
         "@type" => "dctypes:Image",
         "height" => $height,
         "width" => $width,
+        "format" => "image/jpeg",
+            "service" => array(
+              "@context" => "http://iiif.io/api/image/2/context.json",
+              "profile" => "http://iiif.io/api/image/2/level2.json",
+              "@id" => $iiif_base_url . '/' . $tile_prefix . urlencode($object->id) . $tile_suffix ,
+//              "@id" => urldecode(url("iiif-server/iiif/2/http%3A%2F%2F150.145.48.37%3A8080%2Ffedora%2Fobjects%2F{$object->id}%2Fdatastreams%2FOBJ%2Fcontent", array(
+//                 'absolute' => TRUE,
+//                 'language' => (object) array('language' => FALSE),
+//              ))
+//              ),
+            ),
       ),
     "on" => $id,
       "otherContent" => array(
