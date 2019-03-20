@@ -7,10 +7,10 @@
 
 /**
  * Implements hook_init().
- */
 function islandora_iiif_init() {
   require_once __DIR__ . "/vendor/autoload.php";
 }
+ */
 
 /**
  * Implements hook_menu().
@@ -195,20 +195,22 @@ function islandora_iiif_proxied_info_response(AbstractObject $object) {
 
   // @TODO implement a hook here to allow per CMODEL/Context backend.
   // $hooks = islandora_build_hook_list(ISLANDORA_IMAGESERVER_HOOK, $object->models);
-  $metadata_response = islandora_iiif_djatoka_metadata_request($object->id);
+//  $metadata_response = islandora_iiif_djatoka_metadata_request($object->id);
+//  $metadata_response = file_get_contents('http://v2p2arch.to.cnr.it/iiif-server/iiif/2/http%3A%2F%2F150.145.48.37%3A8080%2Ffedora%2Fobjects%2F'.urlencode($object->id).'%2Fdatastreams%2FOBJ%2Fcontent/info.json');
 
-  $theresponsecode = (int) $metadata_response->code;
-  if ($theresponsecode >= 200 && $theresponsecode < 400) {
+  $iiif_base_url = variable_get('islandora_iiif_iiif_url', 'iiif/2');
+  $tile_prefix = urlencode(variable_get('islandora_iiif_tile_url_prefix', 'http://127.0.0.1:8080/fedora/objects/'));
+  $tile_suffix = urlencode(variable_get('islandora_iiif_tile_url_suffix', '/datastreams/OBJ/content'));
+  $metadata_response = file_get_contents($iiif_base_url . '/' . $tile_prefix . urlencode($object->id). $tile_suffix .'/info.json');
+//TODO check not found
+
     drupal_add_http_header('Content-Type', 'application/json');
     drupal_add_http_header('access-control-allow-origin', '*');
     
     // @TODO hookify this so others can alter the canonical
-    drupal_add_http_header('Link', '<' . $base_root . 'islandora_iiif/' . urlencode($object->id) . 'full/max/0/default.jp2>;rel="canonical"');
+//    drupal_add_http_header('Link', '<' . $base_root . 'iiif-server/iiif/2/http%3A%2F%2F150.145.48.37%3A8080%2Ffedora%2Fobjects%2F' . urlencode($object->id) . '%2Fdatastreams%2FOBJ%2Fcontent/full/full/0/default.jpg>;rel="canonical"');
 
-    $info = islandora_iiif_adoredjatoka_info_json(json_decode($metadata_response->data, TRUE));
+//    $info = islandora_iiif_adoredjatoka_info_json(json_decode($metadata_response->data, TRUE));
+    $info = json_decode($metadata_response, TRUE);
     print json_encode($info, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-  }
-  else {
-    drupal_add_http_header('Status', '404 Not Found');
-  }
 }
