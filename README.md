@@ -1,6 +1,6 @@
 # Islandora IIIF
 
-Version only IIIF Presentation API 2.1.x.
+Version IIIF Presentation API 2.1.x.
 This is still experimental and we (Diego Pino and Giancarlo Birello) don't recommend running it in production. 
 Still, it is very cool =)
 
@@ -16,7 +16,7 @@ This module requires the following modules/libraries:
 * [Islandora Solr Search ](https://github.com/islandora/islandora_solr_search)
 * [Islandora Solr Metadatata ](https://github.com/Islandora/islandora_solr_metadata)
 
-This module also requires a working IIIF server API image (i.e. Cantaloupe) you are already running for OpenSeadragon and Internet Archive Bookreader viewers.
+This module also requires a working IIIF server API image (i.e. Cantaloupe), the same you are already running for OpenSeadragon and Internet Archive Bookreader viewers.
 
 This module does not require (kind-of really) but recommends having also installed
 * [Islandora Paged ](https://github.com/islandora/islandora_paged)
