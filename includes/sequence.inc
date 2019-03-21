@@ -151,6 +151,11 @@ function islandora_iiif_sequence_generator(AbstractObject $object, $fromManifest
       "width" => $width,
       "images" => array(
         array(
+          "@id" => urldecode(url("islandora_iiif/{$canvas_info['PID']}/annotation/default", array(
+             'absolute' => TRUE,
+             'language' => (object) array('language' => FALSE),
+             ))
+          ),
           "@type" => "oa:Annotation",
           "motivation" => "sc:painting",
           "resource" => array(
@@ -159,7 +164,7 @@ function islandora_iiif_sequence_generator(AbstractObject $object, $fromManifest
 //            'language' => (object) array('language' => FALSE),
 //            ))
 //            ),
-              "@id" => $iiif_base_url . '/' . $tile_prefix . urlencode($canvas_info['PID']) . $tile_suffix . '/full/full/0/default.jpg',
+            "@id" => $iiif_base_url . '/' . $tile_prefix . urlencode($canvas_info['PID']) . $tile_suffix . '/full/full/0/default.jpg',
             "@type" => "dctypes:Image",
             "height" => $height,
             "width" => $width,
