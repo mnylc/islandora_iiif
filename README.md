@@ -1,7 +1,7 @@
 # Islandora IIIF
 
 Version only IIIF Presentation API 2.1.x.
-This is still experimental and I (Diego Pino) don't recommend running it in production. 
+This is still experimental and we (Diego Pino and Giancarlo Birello) don't recommend running it in production. 
 Still, it is very cool =)
 
 ToDO: update readme
