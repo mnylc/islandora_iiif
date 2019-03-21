@@ -7,6 +7,8 @@ Still, it is very cool =)
 ToDO: update readme
 ==================================
 
+Added response http://localhost:8000/islandora_iiif/islandora%3A1/annotation/default
+
 ## Requirements
 
 This module requires the following modules/libraries:
