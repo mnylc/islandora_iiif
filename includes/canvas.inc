@@ -85,7 +85,7 @@ function islandora_iiif_canvas_callback(AbstractObject $object) {
      ))
   );
 
-  $id = urldecode(url("islandora_iiif/{$object->id}/canvas/default", array(
+  $on_id = urldecode(url("islandora_iiif/{$object->id}/canvas/default", array(
     'absolute' => TRUE,
     'language' => (object) array('language' => FALSE),
   )));
@@ -96,6 +96,11 @@ function islandora_iiif_canvas_callback(AbstractObject $object) {
   $canvas->width = $width;
   $canvas->images = array(
     array(
+       "@id" => urldecode(url("islandora_iiif/{$object->id}/annotation/default", array(
+          'absolute' => TRUE,
+          'language' => (object) array('language' => FALSE),
+          ))
+       ),
       "@type" => "oa:Annotation",
       "motivation" => "sc:painting",
       "resource" => array(
@@ -120,7 +125,7 @@ function islandora_iiif_canvas_callback(AbstractObject $object) {
 //              ),
             ),
       ),
-    "on" => $id,
+    "on" => $on_id,
       "otherContent" => array(
         "@type" => "sc:AnnotationList",
         "@embed" => FALSE,
