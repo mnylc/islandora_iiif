@@ -65,6 +65,17 @@ function islandora_iiif_islandora_sequence_solr_backend_callable($object, $page,
   $qp->solrStart = $page * $limit;
   $qp->solrLimit = $limit;
 
+//We need this to extract also width and height
+  $label_field = variable_get('islandora_solr_object_label_field', 'fgs_label_s');
+  $height_field = variable_get('islandora_paged_content_solr_height_field', 'RELS_INT_height_literal_s');
+  $width_field = variable_get('islandora_paged_content_solr_width_field', 'RELS_INT_width_literal_s');
+  $qp->solrParams['fl'] = implode(', ', array(
+    'PID',
+    $label_field,
+    $height_field,
+    $width_field,
+  ));
+
   // We should have a default sort here for sequences.
 ////  $qp->solrParams['sort'] = "RELS_EXT_isSequenceNumber_s ASC, RELS_EXT_isPageNumber_s ASC";
   $qp->solrParams['sort'] = "RELS_EXT_isSequenceNumber_literal_s ASC";
@@ -73,8 +84,9 @@ function islandora_iiif_islandora_sequence_solr_backend_callable($object, $page,
     $qp->solrParams['sort'] .= "," . $qp->internalSolrParams['sort'];
   }
 
-  $qp->executeQuery();
+  $qp->executeQuery(FALSE);
   //dpm ($qp->islandoraSolrResult['response']);
+
   return array(
     $qp->islandoraSolrResult['response']['numFound'],
     $qp->islandoraSolrResult['response']['objects'],
@@ -87,6 +99,13 @@ function islandora_iiif_islandora_sequence_solr_backend_callable($object, $page,
 function islandora_iiif_sequence_generator(AbstractObject $object, $fromManifest) {
   module_load_include('inc', 'islandora_iiif', 'includes/canvas');
 
+  $label_field = variable_get('islandora_solr_object_label_field', 'fgs_label_s');
+  $height_field = variable_get('islandora_paged_content_solr_height_field', 'RELS_INT_height_literal_s');
+  $width_field = variable_get('islandora_paged_content_solr_width_field', 'RELS_INT_width_literal_s');
+  $iiif_base_url = variable_get('islandora_iiif_iiif_url', 'iiif/2');
+  $tile_prefix = urlencode(variable_get('islandora_iiif_tile_url_prefix', 'http://127.0.0.1:8080/fedora/objects/'));
+  $tile_suffix = urlencode(variable_get('islandora_iiif_tile_url_suffix', '/datastreams/OBJ/content'));
+
   // This is weird. Just to test really. I´m putting the limit to 2000 here. Would love if.
   $canvas_list = islandora_iiif_islandora_sequence_solr_backend_callable($object, 0, 2000);
 
@@ -97,15 +116,13 @@ function islandora_iiif_sequence_generator(AbstractObject $object, $fromManifest
   }
 
   $sequence = new \stdClass();
-// The default sequence should be written out in full within the manifest file, but MUST NOT have the @context property.
 
-    if (!$fromManifest) {
+   // The default sequence should be written out in full within the manifest file, but MUST NOT have the @context property.
+  if (!$fromManifest) {
        $sequence->{'@context'} = "http://iiif.io/api/presentation/2/context.json";
-    }
+  }
 
-// when call from manifest return an incorrect URL
-//  $sequence->{'@id'} = urldecode(url(current_path(), array(
-    $sequence->{'@id'} = urldecode(url("islandora_iiif/{$object->id}/sequence/default", array(
+  $sequence->{'@id'} = urldecode(url("islandora_iiif/{$object->id}/sequence/default", array(
       'absolute' => TRUE,
       'language' => (object) array('language' => FALSE),
     )
@@ -115,7 +132,7 @@ function islandora_iiif_sequence_generator(AbstractObject $object, $fromManifest
   $sequence->label = "Normal";
   $canvases = array();
   foreach ($canvas_list[1] as $canvas_info) {
-    $label = $canvas_info['object_label'];
+    $label = $canvas_info['solr_doc'][$label_field];
 
     $id = urldecode(url("islandora_iiif/{$canvas_info['PID']}/canvas/default", array(
       'absolute' => TRUE,
@@ -123,25 +140,17 @@ function islandora_iiif_sequence_generator(AbstractObject $object, $fromManifest
     )));
     
 
-/** width and height by info.json not solr
-/
-    $intwidth = isset($canvas_info['solr_doc']['RELS_INT_width_literal_s']) ? $canvas_info['solr_doc']['RELS_INT_width_literal_s'] : 640;
-    $intheight = isset($canvas_info['solr_doc']['RELS_INT_height_literal_s']) ? $canvas_info['solr_doc']['RELS_INT_height_literal_s'] : 480;
-    $fitswidth = isset($canvas_info['solr_doc']['fits_metadata_image_imageWidth_ms']) ? $canvas_info['solr_doc']['fits_metadata_image_imageWidth_ms'][0] : 640 ; 
-    $fitsheight = isset($canvas_info['solr_doc']['fits_metadata_image_imageHeight_ms']) ? $canvas_info['solr_doc']['fits_metadata_image_imageHeight_ms'][0] : 480 ; 
-    $height = max($intheight, $fitsheight);
-    $width = max($intwidth ,  $fitswidth);
+/** width and height by solr
 **/
+    $width = isset($canvas_info['solr_doc'][$width_field]) ? $canvas_info['solr_doc'][$width_field] : 640;
+    $height = isset($canvas_info['solr_doc'][$height_field]) ? $canvas_info['solr_doc'][$height_field] : 480;
 
-  $iiif_base_url = variable_get('islandora_iiif_iiif_url', 'iiif/2');
-  $tile_prefix = urlencode(variable_get('islandora_iiif_tile_url_prefix', 'http://127.0.0.1:8080/fedora/objects/'));
-  $tile_suffix = urlencode(variable_get('islandora_iiif_tile_url_suffix', '/datastreams/OBJ/content'));
-  $info_response = file_get_contents($iiif_base_url . '/' . $tile_prefix . urlencode($canvas_info['PID']). $tile_suffix .'/info.json');
-//  $info_response = file_get_contents('http://v2p2arch.to.cnr.it/iiif-server/iiif/2/http%3A%2F%2F150.145.48.37%3A8080%2Ffedora%2Fobjects%2F'.urlencode($canvas_info['PID']).'%2Fdatastreams%2FOBJ%2Fcontent/info.json');
-
-  $jsonArray = json_decode($info_response,true);
-  $width = isset($jsonArray['width']) ? $jsonArray['width'] : 640;
-  $height = isset($jsonArray['height']) ? $jsonArray['height'] : 480;
+/** width and height by info.json
+    $info_response = file_get_contents($iiif_base_url . '/' . $tile_prefix . urlencode($canvas_info['PID']). $tile_suffix .'/info.json');
+    $jsonArray = json_decode($info_response,true);
+    $width = isset($jsonArray['width']) ? $jsonArray['width'] : 640;
+    $height = isset($jsonArray['height']) ? $jsonArray['height'] : 480;
+**/
 
     $canvases[] = array(
       "@id" => $id ,
