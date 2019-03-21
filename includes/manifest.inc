@@ -118,12 +118,25 @@ function islandora_iiif_manifest_callback(AbstractObject $object) {
   // wants to serve this via an alias.
   // The use of url() also allows for further altering via outgoing and incomming
   // alterhooks.
+
+  $iiif_base_url = variable_get('islandora_iiif_iiif_url', 'iiif/2');
+  $tile_prefix = urlencode(variable_get('islandora_iiif_tile_url_prefix', 'http://127.0.0.1:8080/fedora/objects/'));
+  $tile_suffix = urlencode(variable_get('islandora_iiif_tile_url_suffix', '/datastreams/OBJ/content'));
+
   $manifest->thumbnail = array(
-    "@id" => urldecode(url("islandora_iiif/{$object->id}/full/50,/0/default.jp2", array(
-      'absolute' => TRUE,
-      'language' => (object) array('language' => FALSE),
-    ))
-    ),
+//    "@id" => urldecode(url("islandora_iiif/{$object->id}/full/50,/0/default.jp2", array(
+//
+// TODO: use TN datastream for book thumbnail, change to OBJ datastream of first page
+//
+//    "@id" => urldecode(url("iiif-server/iiif/2/http%3A%2F%2F150.145.48.37%3A8080%2Ffedora%2Fobjects%2F".urlencode($object->id)."%2Fdatastreams%2FTN%2Fcontent/full/50,/0/default.jpg", array(
+//      'absolute' => TRUE,
+//      'language' => (object) array('language' => FALSE),
+//    ))
+//    ),
+
+      "@id" => $iiif_base_url . '/' . $tile_prefix . urlencode($object->id) . urlencode("/datastreams/TN/content") . '/full/50,/0/default.jpg',
+/**
+ * NOT SURE if we need this for thumbnail
     "service" => array(
       "@context" => "http://iiif.io/api/image/2/context.json",
       "@id" => urldecode(url("islandora_iiif/{$object->id}/info.json", array(
@@ -132,10 +145,13 @@ function islandora_iiif_manifest_callback(AbstractObject $object) {
       ))),
       "profile" => "http://iiif.io/api/image/2/level2.json",
     ),
+ */
+
+
   );
 
   // And to make this legit we need a sequence with some canvases.
-  $manifest->sequences = array(islandora_iiif_sequence_generator($object));
+  $manifest->sequences = array(islandora_iiif_sequence_generator($object, TRUE));
 
   drupal_add_http_header('Content-Type', 'application/json; charset=utf-8');
   drupal_add_http_header('access-control-allow-origin', '*');
