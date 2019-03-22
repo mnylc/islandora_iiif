@@ -28,7 +28,7 @@ Install as usual, see [this](https://drupal.org/documentation/install/modules-th
 
 ## Documentation
 
-It provides responses for all IIIF Presentation API 2.1 types
+It provides responses for IIIF Presentation API 2.1 types
 
 In the form of:
 

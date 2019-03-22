@@ -25,28 +25,6 @@ function islandora_iiif_admin_settings_form(array $form, array &$form_state) {
   $djatoka_url = $get_default_value('islandora_iiif_djatoka_url', 'http://localhost:8080/adore-djatoka/resolver');
   $djatoka_available_message = islandora_iiif_admin_settings_form_djatoka_available_message($djatoka_url);
   $form = array(
-/**
-    'islandora_iiif_djatoka_url' => array(
-      '#type' => 'textfield',
-      '#prefix' => '<div id="djatoka-path-wrapper">',
-      '#suffix' => '</div>',
-      '#title' => t('Adore-djatoka URL'),
-      '#description' => filter_xss(t('<strong>Server accessible</strong> URL to the djatoka instance\'s resolver, including the trailing \'/resolver\' part). <br/>!msg', array('!msg' => $djatoka_available_message))),
-      '#default_value' => $djatoka_url,
-      '#ajax' => array(
-        'callback' => 'islandora_iiif_admin_settings_form_djatoka_ajax_callback',
-        'wrapper' => 'djatoka-path-wrapper',
-        'effect' => 'fade',
-        'event' => 'change',
-      ),
-    ),
-    'islandora_iiif_resizeondrupal' => array(
-      '#type' => 'checkbox',
-      '#title' => t('Resize images on Drupal via imagemagick'),
-      '#description' => t('Enabling this can have some perfomance costs in favour of a much better image quality. Djatoka\'s resizing function suffers from quality degradation.'),
-      '#default_value' => (int) $get_default_value('islandora_iiif_resizeondrupal', 0),
-    ),
-**/
 
       'islandora_iiif_iiif_url' => array(
         '#type' => 'textfield',
@@ -56,19 +34,27 @@ function islandora_iiif_admin_settings_form(array $form, array &$form_state) {
       ),
 
 
-     'islandora_iiif_tile_url_prefix' => array(
+      'islandora_iiif_tile_url_prefix' => array(
        '#type' => 'textfield',
        '#title' => t('Tile source URL prefix'),
        '#description' => t('Prefix to compose tile source URL (prefix + PID + suffix).'),
        '#default_value' => variable_get('islandora_iiif_tile_url_prefix', 'http://127.0.0.1:8080/fedora/objects/'),
-     ),
+      ),
 
      'islandora_iiif_tile_url_suffix' => array(
        '#type' => 'textfield',
        '#title' => t('Tile source URL suffix'),
        '#description' => t('Suffix to compose tile source URL (prefix + PID + suffix).'),
        '#default_value' => variable_get('islandora_iiif_tile_url_suffix', '/datastreams/OBJ/content'),
-     ),
+      ),
+
+      'islandora_iiif_solr_num_of_results' => array(
+	    '#type' => 'textfield',
+	    '#title' => t('Collection max results per page'),
+	    '#size' => 5,
+	    '#description' => t('Max number of results to show per page, if more pager is enabled'),
+	    '#default_value' => variable_get('islandora_iiif_solr_num_of_results', '20'),
+      ),
 
 
   // @TODO need to define how we are going to fetch web annotations. Probably add an API entry and a hookable callback selector
