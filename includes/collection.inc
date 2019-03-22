@@ -31,7 +31,7 @@ function islandora_iiif_islandora_collection_solr_backend_callable($object, $ind
     '!collection_member_field' => variable_get('islandora_solr_member_of_collection_field', 'RELS_EXT_isMemberOfCollection_uri_ms'),
   )), drupal_get_query_parameters());
 
-  $limit = variable_get('islandora_solr_num_of_results', '20');
+  $limit = variable_get('islandora_iiif_solr_num_of_results', '20');
 
   $qp->solrStart = $index;
   $qp->solrLimit = $limit;
@@ -60,7 +60,7 @@ function islandora_iiif_collection_callback(AbstractObject $object, $index = 1) 
     drupal_not_found();
   }
 
-  $limit = variable_get('islandora_solr_num_of_results', '20');
+  $limit = variable_get('islandora_iiif_solr_num_of_results', '20');
 
   $children_list = islandora_iiif_islandora_collection_solr_backend_callable($object, $index);
   $total_children = $children_list[0];
@@ -69,6 +69,7 @@ function islandora_iiif_collection_callback(AbstractObject $object, $index = 1) 
   $collection_manifests = array();
   $collection_collections = array();
   $istop = variable_get('islandora_repository_pid', 'islandora:root') == $object->id;
+
   if ($children_list[0] != 0) {
     foreach ($current_response as $children_info) {
       $label = "";
