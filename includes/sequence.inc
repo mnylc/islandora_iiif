@@ -142,7 +142,7 @@ function islandora_iiif_sequence_generator(AbstractObject $object, $fromManifest
       'language' => (object) array('language' => FALSE),
     )));
     
-	if ($has_cildren) {
+	if ($has_children) {
 		/** width and height by solr
 		**/
     		$width = isset($canvas_info['solr_doc'][$width_field]) ? $canvas_info['solr_doc'][$width_field] : 640;
