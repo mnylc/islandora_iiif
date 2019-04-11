@@ -134,7 +134,7 @@ function islandora_iiif_manifest_callback(AbstractObject $object) {
 //    ))
 //    ),
 
-      "@id" => $iiif_base_url . '/' . $tile_prefix . urlencode($object->id) . urlencode("/datastreams/TN/content") . '/full/50,/0/default.jpg',
+      "@id" => $iiif_base_url . '/' . $tile_prefix . urlencode($object->id) . urlencode("/datastreams/TN/content") . '/full/100,/0/default.jpg',
 /**
  * NOT SURE if we need this for thumbnail
     "service" => array(
